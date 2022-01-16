@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.24.0/axios.js"></script>
+    <title>axios-ajax</title>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            姓名： <input type="text" id="name">
+            <button id="search">搜索</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>年龄</th>
+                    <th>爱好</th>
+                    <th>邮箱</th>
+                    <th>VIP</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+        <table>
+            <tr>
+                <td>姓名：<input type="text" id="name2"></td>
+
+            </tr>
+            <tr>
+                <td>性别：<input type="radio" name="sex" checked id="nan">男
+                    <input type="radio" name="sex" id="nv">女
+                </td>
+            </tr>
+            <tr>
+                <td>年龄：<input type="text" id="age"></td>
+            </tr>
+            <tr>
+                <td>爱好：
+                    <input name="hobbies" type="checkbox" value="抽烟">抽烟
+                    <input name="hobbies" type="checkbox" value="喝酒">喝酒
+                    <input name="hobbies" type="checkbox" value="泡妞">烫头
+                    <input name="hobbies" type="checkbox" value="洗澡">洗澡
+                    <input name="hobbies" type="checkbox" value="烫头">麻将
+                </td>
+            </tr>
+            <tr>
+                <td>邮箱：<input type="email" id="email"></td>
+
+            </tr>
+            <tr>
+                <td>isVIP：<input type="checkbox" id="isVIP"></td>
+
+            </tr>
+            <tr>
+                <td>
+                    <!-- 隐藏域，将_id隐藏起来 -->
+                    <input type="hidden" id="_id">
+                    <button id="add">添加</button>
+                    <button id="cancel">取消</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script id="list" type="text/html">
+        {{each $data item index}}
+        <tr>
+            <td>{{item.name}}</td>
+            <td>{{item.sex}}</td>
+            <td>{{item.age}}</td>
+            <td>{{item.hobbies}}</td>
+            <td>{{item.email}}</td>
+            <td>{{item.isVIP}}</td>
+            <td>
+                <button onclick="getOne('{{item._id}}')">修改</button>
+                <button onclick="del('{{item._id}}')">删除</button>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/art-template/4.10.0/lib/template-web.js"></script>
+    <script>
+        // 加载学生信息的方法
+        // function loadStudent(name = '') {
+        //     //get方法()，第一个参数是请求地址，第二个参数对象设置请求参数
+        //     //注意：请求参数要放置在第二个参数对象的params属性中
+        //     axios.get('http://localhost:1111/list', {
+        //         params: {
+        //             name
+        //         }
+        //     }).then(({
+        //         data
+        //     }) => {
+        //         document.querySelector('#tbody').innerHTML = template('list', data)
+        //     })
+        // }
+
+        //async 配合 await，简化了.then返回结果的过程
+        async function loadStudent(name = '') {
+            let {
+                data
+            } = await axios.get('http://localhost:1111/list', {
+                params: {
+                    name
+                }
+            })
+            document.querySelector('#tbody').innerHTML = template('list', data)
+        }
+        loadStudent()
+
+        // 搜索按钮点击事件
+        document.querySelector('#search').onclick = function() {
+            loadStudent(document.querySelector('#name').value)
+        }
+
+        //添加按钮点击事件
+        document.querySelector('#add').onclick = function() {
+            //获取用户输入的信息
+            let name = document.querySelector('#name2').value
+            let sex = '男'
+            if (document.querySelector('#nv').checked) {
+                sex = '女'
+            }
+            let age = document.querySelector('#age').value
+            let hobbies = []
+            document.getElementsByName('hobbies').forEach(r => {
+                if (r.checked) {
+                    hobbies.push(r.value)
+                }
+            })
+            let email = document.querySelector('#email').value
+            let isVIP = document.querySelector('#isVIP').checked
+                //根据获取到的信息，创建一个学生对象
+            let stu = {
+                    name,
+                    sex,
+                    age,
+                    hobbies,
+                    email,
+                    isVIP
+                }
+                //定义请求的地址
+            let url = 'http://localhost:1111/add'
+            if (document.querySelector('#add').innerHTML == '修改') {
+                //切换成修改接口地址
+                url = 'http://localhost:1111/update'
+                    //设置学生对象的_id属性
+                stu._id = document.querySelector('#_id').value
+            }
+            axios.post(url, stu).then(({
+                data
+            }) => {
+                if (data) {
+                    if (document.querySelector('#add').innerHTML == "添加") {
+                        alert('添加成功')
+                    } else {
+                        alert('修改成功')
+                        document.querySelector('#add').innerHTML = '添加'
+                    }
+                    //调用加载学生信息的方法
+                    loadStudent()
+                        //清空表单
+                    clearInput()
+                }
+            })
+        }
+
+
+        // 清空方法
+        function clearInput() {
+            document.querySelector('#name2').value = ''
+            document.querySelector('#nan').checked = true
+            document.querySelector('#age').value = ''
+            document.getElementsByName('hobbies').forEach(r => {
+                r.checked = false
+            })
+            document.querySelector('#email').value = ''
+            document.querySelector('#isVIP').checked = false
+        }
+
+        // 删除事件
+        function del(_id) {
+            if (!confirm('确定删除吗？')) return
+            axios.post('http://localhost:1111/delete', {
+                _id
+            }).then(({
+                data
+            }) => {
+                if (data) {
+                    alert('删除成功')
+                        // 更新列表
+                    loadStudent()
+                }
+            })
+        }
+        //根据id获取学生信息
+        function getOne(_id) {
+            axios.get('http://localhost:1111/getOne', {
+                params: {
+                    _id
+                }
+            }).then(({
+                data: stu
+            }) => {
+                document.querySelector('#name2').value = stu.name
+                if (stu.sex == '男') {
+                    document.querySelector('#nan').checked = true
+                } else {
+                    document.querySelector('#nv').checked = true
+                }
+                document.querySelector('#age').value = stu.age
+                    // 爱好
+                stu.hobbies.forEach(h => {
+                    document.querySelector(`input[value='${h}']`).checked = true
+                })
+                document.querySelector('#email').value = stu.email
+                document.querySelector('#isVIP').checked = stu.isVIP
+                    //将_id在隐藏域里面保存起来
+                document.querySelector('#_id').value = stu._id
+            })
+
+            //修改添加按钮的文本
+            document.querySelector('#add').innerHTML = '修改'
+        }
+        //取消按钮点击事件
+        document.querySelector('#cancel').onclick = function() {
+            //清空表单元素
+            clearInput()
+                //修改添加按钮的文本
+            document.querySelector('#add').innerHTML = '添加'
+        }
+    </script>
+</body>
+
+</html>

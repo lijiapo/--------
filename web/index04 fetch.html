@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            姓名： <input type="text" id="name">
+            <button id="search">搜索</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>年龄</th>
+                    <th>爱好</th>
+                    <th>邮箱</th>
+                    <th>VIP</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+        <table>
+            <tr>
+                <td>姓名：<input type="text" id="name2"></td>
+
+            </tr>
+            <tr>
+                <td>性别：<input type="radio" name="sex" checked id="nan">男
+                    <input type="radio" name="sex" id="nv">女
+                </td>
+            </tr>
+            <tr>
+                <td>年龄：<input type="text" id="age"></td>
+            </tr>
+            <tr>
+                <td>爱好：
+                    <input name="hobbies" type="checkbox" value="抽烟">抽烟
+                    <input name="hobbies" type="checkbox" value="喝酒">喝酒
+                    <input name="hobbies" type="checkbox" value="泡妞">烫头
+                    <input name="hobbies" type="checkbox" value="洗澡">洗澡
+                    <input name="hobbies" type="checkbox" value="烫头">麻将
+                </td>
+            </tr>
+            <tr>
+                <td>邮箱：<input type="email" id="email"></td>
+
+            </tr>
+            <tr>
+                <td>isVIP：<input type="checkbox" id="isVIP"></td>
+
+            </tr>
+            <tr>
+                <td>
+                    <!-- 隐藏域，将_id隐藏起来 -->
+                    <input type="hidden" id="_id">
+                    <button id="add">添加</button>
+                    <button id="cancel">取消</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script id="list" type="text/html">
+        {{each $data item index}}
+        <tr>
+            <td>{{item.name}}</td>
+            <td>{{item.sex}}</td>
+            <td>{{item.age}}</td>
+            <td>{{item.hobbies}}</td>
+            <td>{{item.email}}</td>
+            <td>{{item.isVIP}}</td>
+            <td>
+                <button onclick="getOne('{{item._id}}')">修改</button>
+                <button onclick="del('{{item._id}}')">删除</button>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/art-template/4.10.0/lib/template-web.js"></script>
+    <script>
+        // 加载学生信息的方法
+        function loadStudent(name = '') {
+            // fetch()方法，用于发送请求，返回结果是响应对象
+            // get请求要拼接传参
+            fetch('http://localhost:1111/list?name=' + name).then(res => {
+                return res.json()
+            }).then(r => {
+                document.querySelector('#tbody').innerHTML = template('list', r)
+            })
+
+        }
+        loadStudent()
+
+        // 搜索按钮点击事件
+        document.querySelector('#search').onclick = function() {
+            loadStudent(document.querySelector('#name').value)
+        }
+
+        //添加按钮点击事件
+        document.querySelector('#add').onclick = function() {
+            //获取用户输入的信息
+            let name = document.querySelector('#name2').value
+            let sex = '男'
+            if (document.querySelector('#nv').checked) {
+                sex = '女'
+            }
+            let age = document.querySelector('#age').value
+            let hobbies = []
+            document.getElementsByName('hobbies').forEach(r => {
+                if (r.checked) {
+                    hobbies.push(r.value)
+                }
+            })
+            let email = document.querySelector('#email').value
+            let isVIP = document.querySelector('#isVIP').checked
+                //根据获取到的信息，创建一个学生对象
+            let stu = {
+                    name,
+                    sex,
+                    age,
+                    hobbies,
+                    email,
+                    isVIP
+                }
+                //定义请求的地址
+            let url = 'http://localhost:1111/add'
+            if (document.querySelector('#add').innerHTML == '修改') {
+                //切换成修改接口地址
+                url = 'http://localhost:1111/update'
+                    //设置学生对象的_id属性
+                stu._id = document.querySelector('#_id').value
+            }
+            //fetch()方法的第一个参数是请求地址
+            //第二个参数是配置对象
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                //设置post请求方式的请求体，其实就是post请求参数
+                body: JSON.stringify(stu)
+            }).then(res => {
+                return res.json()
+            }).then(r => {
+                if (r) {
+                    if (document.querySelector('#add').innerHTML == "添加") {
+                        alert('添加成功')
+                    } else {
+                        alert('修改成功')
+                        document.querySelector('#add').innerHTML = '添加'
+                    }
+                    //调用加载学生信息的方法
+                    loadStudent()
+                        //清空表单
+                    clearInput()
+                }
+            })
+        }
+
+        // 清空方法
+        function clearInput() {
+            document.querySelector('#name2').value = ''
+            document.querySelector('#nan').checked = true
+            document.querySelector('#age').value = ''
+            document.getElementsByName('hobbies').forEach(r => {
+                r.checked = false
+            })
+            document.querySelector('#email').value = ''
+            document.querySelector('#isVIP').checked = false
+        }
+
+        // 删除事件
+        function del(_id) {
+            if (!confirm('确定删除吗？')) return
+            fetch('http://localhost:1111/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    _id
+                })
+            }).then(res => {
+                return res.json()
+            }).then(r => {
+                if (r) {
+                    alert('删除成功')
+                        //调用加载学生信息的方法
+                    loadStudent()
+                }
+            })
+        }
+        //根据id获取学生信息
+        function getOne(_id) {
+            fetch('http://localhost:1111/getOne?_id=' + _id).then(res => {
+                return res.json()
+            }).then(stu => {
+                document.querySelector('#name2').value = stu.name
+                if (stu.sex == '男') {
+                    document.querySelector('#nan').checked = true
+                } else {
+                    document.querySelector('#nv').checked = true
+                }
+                document.querySelector('#age').value = stu.age
+                    // 爱好
+                stu.hobbies.forEach(h => {
+                    document.querySelector(`input[value='${h}']`).checked = true
+                })
+                document.querySelector('#email').value = stu.email
+                document.querySelector('#isVIP').checked = stu.isVIP
+                    //将_id在隐藏域里面保存起来
+                document.querySelector('#_id').value = stu._id
+            })
+
+            //修改添加按钮的文本
+            document.querySelector('#add').innerHTML = '修改'
+        }
+        //取消按钮点击事件
+        document.querySelector('#cancel').onclick = function() {
+            //清空表单元素
+            clearInput()
+                //修改添加按钮的文本
+            document.querySelector('#add').innerHTML = '添加'
+        }
+    </script>
+</body>
+
+</html>

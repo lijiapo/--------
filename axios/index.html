@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.24.0/axios.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <h1 id="a"></h1>
+    <h2 id="b"></h2>
+    <h3 id="c"></h3>
+
+</body>
+<script>
+    function loadDate() {
+        axios.get('./a.json').then(({
+            data
+        }) => {
+            document.querySelector('#a').innerHTML = data.name
+            console.log(data.name);
+            return axios.get('./b.json')
+        }).then(({
+            data
+        }) => {
+            document.querySelector('#b').innerHTML = data.name
+            return axios.get('./c.json')
+        }).then(({
+            data
+        }) => {
+            document.querySelector('#c').innerHTML = data.name
+        })
+    }
+    // loadDate()
+    async function loadDate2() {
+        let {
+            data: a
+        } = await axios.get('./a.json')
+        document.querySelector('#a').innerHTML = a.name
+        let {
+            data: b
+        } = await axios.get('./b.json')
+        document.querySelector('#b').innerHTML = b.name
+        let {
+            data: c
+        } = await axios.get('./c.json')
+        document.querySelector('#c').innerHTML = c.name
+    }
+    loadDate2()
+</script>
+
+</html>

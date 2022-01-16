@@ -1,0 +1,26 @@
+{
+    "posts": [{
+            "id": 1,
+            "title": "json-server",
+            "author": "typicode"
+        },
+        {
+            "id": 2,
+            "title": "李欢",
+            "author": "秦玉姣"
+        },
+        {
+            "title": "你好啊",
+            "author": "我很好",
+            "id": 4
+        }
+    ],
+    "comments": [{
+        "id": 1,
+        "body": "some comment",
+        "postId": 1
+    }],
+    "profile": {
+        "name": "typicode"
+    }
+}
